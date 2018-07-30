@@ -30,4 +30,12 @@ contract('Test all ERC20 functions', accounts => {
         assert.equal(balance.toString(), web3.toWei(120), `Address: ${maria} balance should be 120 tokens`);
     });
 
+    it("Transfer mistakenly sent tokens to contract", async () => {
+        let erc20Instance = await ERC20.deployed();
+        await erc20Instance.transfer(ERC20.address, web3.toWei(20), {from: afonso});
+        await erc20Instance.transferAnyERC20Token(ERC20.address, web3.toWei(20), {from: afonso});
+        let balance = await erc20Instance.balanceOf.call(afonso);
+        assert.equal(balance.toNumber(), web3.toWei(999880), `Address: ${afonso} balance should be 999880 tokens`);
+    });
+
 });
