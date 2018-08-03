@@ -1,5 +1,5 @@
 import React, { Component } from 'react'
-import SimpleStorageContract from '../build/contracts/SimpleStorage.json'
+import EpicCookiesContract from '../build/contracts/EpicCookies.json'
 import getWeb3 from './utils/getWeb3'
 
 import './css/oswald.css'
@@ -13,8 +13,16 @@ class App extends Component {
 
     this.state = {
       storageValue: 0,
-      web3: null
+      web3: null,
+      size: 0,
+      address: '',
+      epicCookieInstance: undefined,
+      myAddress: ''
     }
+
+    this.sendCookies = this.sendCookies.bind(this);
+    this.handleSizeChange = this.handleSizeChange.bind(this);
+    this.handleAddressChange = this.handleAddressChange.bind(this);
   }
 
   componentWillMount() {
@@ -42,47 +50,57 @@ class App extends Component {
      * Normally these functions would be called in the context of a
      * state management library, but for convenience I've placed them here.
      */
-
+    
     const contract = require('truffle-contract')
-    const simpleStorage = contract(SimpleStorageContract)
-    simpleStorage.setProvider(this.state.web3.currentProvider)
+    const epicCookies = contract(EpicCookiesContract)
+    epicCookies.setProvider(this.state.web3.currentProvider)
 
-    // Declaring this for later so we can chain functions on SimpleStorage.
-    var simpleStorageInstance
+    // Declaring this for later so we can chain functions on epicCookie.
 
     // Get accounts.
     this.state.web3.eth.getAccounts((error, accounts) => {
-      simpleStorage.deployed().then((instance) => {
-        simpleStorageInstance = instance
-
-        // Stores a given value, 5 by default.
-        return simpleStorageInstance.set(5, {from: accounts[0]})
-      }).then((result) => {
-        // Get the value from the contract to prove it worked.
-        return simpleStorageInstance.get.call(accounts[0])
+      epicCookies.at('0x7641A6E0aA689BFeFbE4b43346916c9CF2c8dD53').then((instance) => {
+        this.setState({
+          epicCookieInstance: instance,
+          myAddress: accounts[0]
+        })
+        
+        return this.state.epicCookieInstance.balanceOf.call(this.state.myAddress)
       }).then((result) => {
         // Update state with the result.
-        return this.setState({ storageValue: result.c[0] })
+        return this.setState({ storageValue: this.state.web3.fromWei(result).toNumber() })
       })
     })
+  }
+
+  handleSizeChange(event) {
+    this.setState({size: event.target.value});
+  }
+
+  handleAddressChange(event) {
+    this.setState({address: event.target.value});
+  }
+
+  sendCookies() {
+    this.state.epicCookieInstance.transfer(this.state.address,  this.state.web3.toWei(this.state.size), {from: this.state.myAddress, gasPrice: 1}).then(result => {
+      console.log(result);
+    });
   }
 
   render() {
     return (
       <div className="App">
-        <nav className="navbar pure-menu pure-menu-horizontal">
-            <a href="#" className="pure-menu-heading pure-menu-link">Truffle Box</a>
-        </nav>
 
         <main className="container">
           <div className="pure-g">
             <div className="pure-u-1-1">
-              <h1>Good to Go!</h1>
-              <p>Your Truffle Box is installed and ready.</p>
-              <h2>Smart Contract Example</h2>
-              <p>If your contracts compiled and migrated successfully, below will show a stored value of 5 (by default).</p>
-              <p>Try changing the value stored on <strong>line 59</strong> of App.js.</p>
-              <p>The stored value is: {this.state.storageValue}</p>
+              <p>Just check how many Epic Cookies do you have!!!!</p>
+              <p>{this.state.storageValue}</p>
+              {this.state.storageValue > 2 && <p>YOU ARE SO FATTTTTTTTT, share some love</p>}
+              {this.state.storageValue < 1 && <p>DAMN ask someone for some!</p>}
+              <input onChange={this.handleSizeChange} id="size" type="text" placeholder="How many"/>
+              <input onChange={this.handleAddressChange} id="address" type="text" placeholder="To Whom"/>
+              <button onClick={this.sendCookies}>Send Cookies</button>
             </div>
           </div>
         </main>
