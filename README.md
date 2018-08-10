@@ -1,5 +1,6 @@
 # ethereum-solidity
 Prototypes
+- Payment Channel early version https://medium.com/@matthewdif/ethereum-payment-channel-in-50-lines-of-code-a94fad2704bc
 
 Tools:
 - Ganache https://truffleframework.com/ganache
